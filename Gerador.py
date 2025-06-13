@@ -51,7 +51,7 @@ class Gerador(Agent):
         self.add_behaviour(ft, template)
 
 async def main():
-  gerador = Gerador("jvfg@jabb.im", "TesS1")
+  gerador = Gerador("jvfg@jabb.im", "TrabS1")
   await gerador.start()
 
 if __name__ == "__main__":
