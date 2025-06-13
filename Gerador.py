@@ -4,6 +4,7 @@ from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 from spade.message import Message
 import random
+import time
 
 class Gerador(Agent):
     x = random.randint(-1000,1000)
@@ -51,8 +52,16 @@ class Gerador(Agent):
         self.add_behaviour(ft, template)
 
 async def main():
-  gerador = Gerador("jvfg@jabb.im", "TrabS1")
-  await gerador.start()
+    gerador = Gerador("jvfg@jabb.im", "TrabS1")
+    await gerador.start()
+
+    while gerador.is_alive():
+        try:
+            time.sleep(1)
+        except KeyboardInterrupt:
+            gerador.stop()
+            break
+    print("Agente encerrou!")
 
 if __name__ == "__main__":
   spade.run(main())
