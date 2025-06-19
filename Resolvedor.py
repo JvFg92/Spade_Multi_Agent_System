@@ -1,63 +1,70 @@
 import spade
 from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour
-from spade.template import Template
+from spade.behaviour import OneShotBehaviour
 from spade.message import Message
-import random
-import time
+from spade.template import Template
 
-class Resolvedor(Agent):
-    x = random.randint(-1000, 1000)
-    a = 0
-    while a == 0:
-        a = random.randint(-100, 100)
-    y = -1 * (a * x)
+"""
+User1: rcvr@jabb.im
+Password: TrabS1
 
-    class funcao_1grau(CyclicBehaviour):
+User2: jvfg@jabb.im
+Password: TrabS1
+"""
+
+class SenderAgent(Agent):
+    class InformBehav(OneShotBehaviour):
         async def run(self):
-            res = await self.receive(timeout=5)
-            if res:
-                x = float(res.body)
-                x = float(Resolvedor.a * x + Resolvedor.y)
-                print("Enviou para " + str(res.sender) + " f(", res.body, ")= ", x, "=>", int(x))
-                msg = Message(to=str(res.sender)) 
-                msg.set_metadata("performative", "inform")  
-                msg.body = str(int(x))
-                await self.send(msg)
-    class tipo_funcao(CyclicBehaviour):
-        async def run(self):
-            msg = await self.receive(timeout=5)
-            if msg:
-                msg = Message(to=str(msg.sender))
-                msg.set_metadata("performative", "inform")
-                msg.body = "1grau" 
-                await self.send(msg)
-                print("Respondeu para" + str(msg.sender) + " com " + msg.body)
+            print("InformBehav running")
+            msg = Message(to="rcvr@jabb.im")     # Instantiate the message
+            msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
+            msg.body = "Hello World"                    # Set the message content
+
+            await self.send(msg)
+            print("Message sent!")
+
+            # stop agent from behaviour
+            await self.agent.stop()
+
     async def setup(self):
-        t = Template()
-        t.set_metadata("performative", "subscribe")
+        print("SenderAgent started")
+        b = self.InformBehav()
+        self.add_behaviour(b)
 
-        tf = self.funcao_1grau()
-        print("Funcao de 1o grau: ", Resolvedor.x)
-        print("Funcao: ", Resolvedor.a, "x + (", Resolvedor.y, ")")
+class ReceiverAgent(Agent):
+    class RecvBehav(OneShotBehaviour):
+        async def run(self):
+            print("RecvBehav running")
 
-        self.add_behaviour(tf, t)
+            msg = await self.receive(timeout=10) # wait for a message for 10 seconds
+            if msg:
+                print("Message received with content: {}".format(msg.body))
+            else:
+                print("Did not received any message after 10 seconds")
 
-        ft = self.tipo_funcao()
+            # stop agent from behaviour
+            await self.agent.stop()
+
+    async def setup(self):
+        print("ReceiverAgent started")
+        b = self.RecvBehav()
         template = Template()
-        template.set_metadata("performative", "request")
-        self.add_behaviour(ft, template)
-async def main():
-    resolvedor = Resolvedor("jvfg@jabb.im", "TrabS1")
-    await resolvedor.start()
+        template.set_metadata("performative", "inform")
+        self.add_behaviour(b, template)
 
-    while resolvedor.is_alive():
-        try:
-            time.sleep(1)
-        except KeyboardInterrupt:
-            resolvedor.stop()
-            break
-    print("Agente encerrou!")
+
+async def main():
+    receiveragent = ReceiverAgent("rcvr@jabb.im", "TrabS1")
+    await receiveragent.start(auto_register=True)
+    print("Receiver started")
+
+    senderagent = SenderAgent("jvfg@jabb.im", "TrabS1")
+    await senderagent.start(auto_register=True)
+    print("Sender started")
+
+    await spade.wait_until_finished(receiveragent)
+    print("Agents finished")
+
+
 if __name__ == "__main__":
     spade.run(main())
-    print("Agente Resolvedor iniciado!")

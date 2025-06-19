@@ -6,6 +6,14 @@ from spade.message import Message
 import random
 import time
 
+"""
+User1: rcvr@jabb.im
+Password: TrabS1
+
+User2: jvfg@jabb.im
+Password: TrabS1
+"""
+
 class Gerador(Agent):
     x = random.randint(-1000,1000)
     a=0
