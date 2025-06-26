@@ -51,18 +51,11 @@ git clone https://github.com/JvFg92/Spade_Multi_Agent_System
 
 ### 5. Running the scripts: ▶️
 **Generator:**
-```bash
-cd Spade_Multi_Agent_System
-python Gerador.py
-```
-
-**Solver:**
-
-⚠️ **Open other Terminal** ⚠️
+⚠️ **Open a Terminal** ⚠️
 
 **On Linux 🐧:**
 ```bash
-cd my_spade_project/Spade_Multi_Agent_System
+cd my_spade_project
 ```
 
 ```bash
@@ -70,12 +63,16 @@ source venv/bin/activate
 ```
 
 ```bash
-python3 Resolvedor.py
+cd pade_Multi_Agent_System
+```
+
+```bash
+python3 Gerador.py
 ```
 
 **On Windows 🪟:**
 ```bash
-cd my_spade_project/Spade_Multi_Agent_System
+cd my_spade_project
 ```
 
 ```bash
@@ -83,8 +80,12 @@ cd my_spade_project/Spade_Multi_Agent_System
 ```
 
 ```bash
-#python Resolvedor.py
-py Resolvedor.py
+cd pade_Multi_Agent_System
+```
+
+```bash
+#python Gerador.py
+py Gerador.py
 ```
 
 ### 6. When you're finished, you can deactivate the environment with a single command:
