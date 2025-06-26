@@ -5,6 +5,7 @@ from spade.message import Message
 import asyncio
 import math
 
+#Oi jv
 """
 Credenciais dos Agentes
 Gerador: jvfg@jabb.im
