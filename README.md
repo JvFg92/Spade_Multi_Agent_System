@@ -63,7 +63,7 @@ source venv/bin/activate
 ```
 
 ```bash
-cd pade_Multi_Agent_System
+cd Spade_Multi_Agent_System
 ```
 
 ```bash
@@ -80,7 +80,7 @@ cd my_spade_project
 ```
 
 ```bash
-cd pade_Multi_Agent_System
+cd Spade_Multi_Agent_System
 ```
 
 ```bash
@@ -101,7 +101,7 @@ source venv/bin/activate
 ```
 
 ```bash
-cd pade_Multi_Agent_System
+cd Spade_Multi_Agent_System
 ```
 
 ```bash
@@ -114,15 +114,11 @@ cd my_spade_project
 ```
 
 ```bash
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-```bash
 .\venv\Scripts\activate
 ```
 
 ```bash
-cd pade_Multi_Agent_System
+cd Spade_Multi_Agent_System
 ```
 
 ```bash
