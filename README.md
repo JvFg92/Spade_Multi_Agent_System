@@ -88,6 +88,44 @@ cd pade_Multi_Agent_System
 py Gerador.py
 ```
 
+**Solver:**
+⚠️ **Open another Terminal** ⚠️
+
+**On Linux 🐧:**
+```bash
+cd my_spade_project
+```
+
+```bash
+source venv/bin/activate
+```
+
+```bash
+cd pade_Multi_Agent_System
+```
+
+```bash
+python3 Resolvedor.py
+```
+
+**On Windows 🪟:**
+```bash
+cd my_spade_project
+```
+
+```bash
+.\venv\Scripts\activate
+```
+
+```bash
+cd pade_Multi_Agent_System
+```
+
+```bash
+#python Resolvedor.py
+py Resolvedor.py
+```
+
 ### 6. When you're finished, you can deactivate the environment with a single command:
 ⚠️ **Do it for each terminal** ⚠️
 ```bash
