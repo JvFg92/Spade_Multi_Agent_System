@@ -7,70 +7,125 @@ import random
 import time
 
 """
-User1: rcvr@jabb.im
-Password: TrabS1
-
-User2: jvfg@jabb.im
-Password: TrabS1
+Credenciais dos Agentes
+Gerador: jvfg@jabb.im
+Resolvedor: rcvr@jabb.im
+Senha de ambos: TrabS1
 """
 
 class Gerador(Agent):
-    x = random.randint(-1000,1000)
-    a=0
-    while a == 0:
-        a = random.randint(-100,100)
-    y = -1 * (a*x)
 
-    class funcao_1grau(CyclicBehaviour):
+    def _generate_1grau(self):
+        """Gera uma função de 1º grau: f(x) = ax + b"""
+        self.root1 = random.randint(-1000, 1000)
+        self.a = 0
+        while self.a == 0:
+            self.a = random.randint(-100, 100)
+        self.b = -1 * (self.a * self.root1)
+        print(f"Função de 1º Grau Gerada: f(x) = {self.a}x + {self.b}. Raiz = {self.root1}")
+
+    def _generate_2grau(self):
+        """Gera uma função de 2º grau: f(x) = a(x-r1)(x-r2)"""
+        self.root1 = random.randint(-1000, 1000)
+        self.root2 = random.randint(-1000, 1000)
+        self.a = 0
+        while self.a == 0:
+            self.a = random.randint(-10, 10)
+        # f(x) = a * (x^2 - (r1+r2)x + r1*r2)
+        print(f"Função de 2º Grau Gerada. Raízes = {self.root1}, {self.root2}")
+
+    def _generate_3grau(self):
+        """Gera uma função de 3º grau: f(x) = k(x-r1)(x-r2)(x-r3)"""
+        self.root1 = random.randint(-200, 200) # Limita para evitar números muito grandes
+        self.root2 = random.randint(-200, 200)
+        self.root3 = random.randint(-200, 200)
+        self.k = 0
+        while self.k == 0:
+            self.k = random.uniform(-1, 1)
+        print(f"Função de 3º Grau Gerada. Raízes = {self.root1}, {self.root2}, {self.root3}")
+
+    def calculate(self, x):
+        """Calcula f(x) com base no tipo de função gerada"""
+        if self.func_type == "1grau":
+            return self.a * x + self.b
+        elif self.func_type == "2grau":
+            return self.a * (x - self.root1) * (x - self.root2)
+        elif self.func_type == "3grau":
+            return self.k * (x - self.root1) * (x - self.root2) * (x - self.root3)
+        return None
+
+    class CalculateBehav(CyclicBehaviour):
         async def run(self):
-            res = await self.receive(timeout=5)
+            # Espera por uma mensagem com um valor de x para calcular
+            res = await self.receive(timeout=10)
             if res:
-                x = float(res.body)
-                x = float( Gerador.a*x + Gerador.y )
-                print("Enviou para " + str(res.sender) + " f(",res.body,")= ",x,"=>",int(x))
-                msg = Message(to=str(res.sender)) 
-                msg.set_metadata("performative", "inform")  
-                msg.body = str(int(x))
-                await self.send(msg)
+                try:
+                    x = float(res.body)
+                    result = self.agent.calculate(x)
+                    
+                    print(f"Recebeu pedido de {res.sender} para x = {x}. f(x) = {int(result)}")
 
-    class tipo_funcao(CyclicBehaviour):
+                    # Envia o resultado de volta
+                    msg = Message(to=str(res.sender))
+                    msg.set_metadata("performative", "inform")
+                    msg.body = str(int(result))
+                    await self.send(msg)
+                except (ValueError, TypeError) as e:
+                    print(f"Erro ao processar o pedido de {res.sender}: {e}")
+
+
+    class ReportTypeBehav(CyclicBehaviour):
         async def run(self):
-            msg = await self.receive(timeout=5)
+            # Espera por uma solicitação do tipo da função
+            msg = await self.receive(timeout=10)
             if msg:
-                msg = Message(to=str(msg.sender))
-                msg.set_metadata("performative", "inform")
-                msg.body = "1grau" 
-                await self.send(msg)
-                print("Respondeu para" + str(msg.sender) + " com " + msg.body)
-
+                # Envia o tipo da função de volta
+                response = Message(to=str(msg.sender))
+                response.set_metadata("performative", "inform")
+                response.body = self.agent.func_type
+                await self.send(response)
+                print(f"Respondeu para {msg.sender} com o tipo: {self.agent.func_type}")
 
     async def setup(self):
-        t = Template()
-        t.set_metadata("performative","subscribe")
+        """Setup do agente Gerador."""
+        print(f"Agente Gerador {self.jid} inicializando...")
 
-        tf = self.funcao_1grau()
-        print("Funcao de 1o grau: ", Gerador.x)
-        print("Funcao: ", Gerador.a, "x + (", Gerador.y, ")")
+        # Sorteia o tipo de função e gera seus parâmetros
+        self.func_type = random.choice(["1grau", "2grau", "3grau"])
+        if self.func_type == "1grau":
+            self._generate_1grau()
+        elif self.func_type == "2grau":
+            self._generate_2grau()
+        else:
+            self.func_type = "3grau" # Garante que seja 3grau se não for os outros
+            self._generate_3grau()
+        
+        # Comportamento para responder o tipo da função
+        type_behav = self.ReportTypeBehav()
+        template_type = Template()
+        template_type.set_metadata("performative", "request")
+        self.add_behaviour(type_behav, template_type)
 
-        self.add_behaviour(tf,t)
+        # Comportamento para calcular o valor da função
+        calc_behav = self.CalculateBehav()
+        template_calc = Template()
+        template_calc.set_metadata("performative", "subscribe")
+        self.add_behaviour(calc_behav, template_calc)
 
-        ft = self.tipo_funcao()
-        template = Template()
-        template.set_metadata("performative", "request")
-        self.add_behaviour(ft, template)
 
 async def main():
-    gerador = Gerador("jvfg@jabb.im", "TrabS1")
-    await gerador.start()
+    # O user do gerador é jvfg@jabb.im
+    gerador_agent = Gerador("jvfg@jabb.im", "TrabS1")
+    await gerador_agent.start(auto_register=True)
+    print("Gerador iniciado e aguardando solicitações...")
 
-    while gerador.is_alive():
+    while gerador_agent.is_alive():
         try:
             time.sleep(1)
         except KeyboardInterrupt:
-            gerador.stop()
+            await gerador_agent.stop()
             break
-    print("Agente encerrou!")
+    print("Agente Gerador encerrou!")
 
 if __name__ == "__main__":
-  spade.run(main())
-  
+    spade.run(main())
