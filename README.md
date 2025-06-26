@@ -114,6 +114,10 @@ cd my_spade_project
 ```
 
 ```bash
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+```bash
 .\venv\Scripts\activate
 ```
 
