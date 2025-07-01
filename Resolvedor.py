@@ -33,14 +33,11 @@ class ResolvedorAgent(Agent):
             print("FSM finalizada.")
             await self.agent.stop()
 
-    # #################################################################
-    # ESTADO 1: GET_FUNCTION_TYPE
-    # #################################################################
     class GetTypeState(State):
         async def run(self):
             print("[Estado GetType] Solicitando tipo da função ao Gerador...")
             
-            # Envia uma mensagem de 'request' para obter o tipo da função
+            #Envia uma mensagem de 'request' para obter o tipo da função
             msg = Message(to=GERADOR_JID)
             msg.set_metadata("performative", "request")
             msg.body = "Qual o tipo da sua função?"
@@ -56,9 +53,6 @@ class ResolvedorAgent(Agent):
                 print("[Estado GetType] O Gerador não respondeu a tempo.")
                 self.set_next_state(STATE_FAIL)
 
-    # #################################################################
-    # ESTADO 2: SOLVE_FUNCTION
-    # #################################################################
     class SolveState(State):
         async def ask_gerador(self, x_value):
             """Envia um valor x e retorna a resposta f(x) do gerador."""
