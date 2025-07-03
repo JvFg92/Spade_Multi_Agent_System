@@ -21,15 +21,15 @@ class Resolvedor(Agent):
                 if degree in ["1", "2", "3"]:
                     self.agent.degree = int(degree)
                     print(f"[Resolvedor] Função de {degree}º grau")
-                    self.agent.add_behaviour(self.agent.SecantMethod())
+                    self.agent.add_behaviour(self.agent.FindRoot())
                     self.kill()
                 else:
                     print(f"[Resolvedor] Grau inválido: {degree}")
                     self.kill()
 
-    class SecantMethod(CyclicBehaviour):
+    class FindRoot(CyclicBehaviour):
         async def on_start(self):
-            print("[Resolvedor] Iniciando método da secante...")
+            print("[Resolvedor] Iniciando Calculo das Raízes...")
             self.results = []  # Store (x, f(x)) pairs
             self.x0 = random.randint(-100, 100)
             self.x1 = random.randint(-100, 100)
