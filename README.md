@@ -1,4 +1,4 @@
-# Python Function Solver Agents 🕵️‍♀️
+# Python Function Generator & Solver Agents 🕵️‍♀️
 
 This project demonstrates a multi-agent system using the `spade` library to generate and solve polynomial functions. The system consists of two main agents: `Gerador` (Generator) and `Resolvedor` (Solver).
 
