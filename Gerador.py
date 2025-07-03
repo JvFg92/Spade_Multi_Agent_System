@@ -1,3 +1,7 @@
+"""
+Please take a look in the repository https://github.com/JvFg92/Spade_Multi_Agent_System in github.
+"""
+
 import spade
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour, OneShotBehaviour

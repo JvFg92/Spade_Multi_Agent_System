@@ -1,3 +1,7 @@
+"""
+Please take a look in the repository https://github.com/JvFg92/Spade_Multi_Agent_System in github.
+"""
+
 import spade
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
@@ -156,8 +160,6 @@ class Resolvedor(Agent):
                 print("[Resolvedor] Não foi encontrado intervalo com mudança de sinal.")
                 return
 
-            # Polynomial division to get quadratic: (kx^3 + bx^2 + cx + d) / (x - root1)
-            # Resulting quadratic: kx^2 + (b + k*root1)x + (c + b*root1 + k*root1^2)
             q_a = k
             q_b = b + k * root1
             q_c = c + b * root1 + k * root1**2
