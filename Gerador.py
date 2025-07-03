@@ -82,13 +82,13 @@ class Gerador(Agent):
         """Setup do agente Gerador."""
         print(f"Agente Gerador {self.jid} inicializando...")
 
-        self.func_type = random.choice(["1grau", "2grau", "3grau"])
-        if self.func_type == "1grau":
+        self.func_type = random.choice(["1", "2", "3"])
+        if self.func_type == "1":
             self._generate_1grau()
-        elif self.func_type == "2grau":
+        elif self.func_type == "2":
             self._generate_2grau()
         else:
-            self.func_type = "3grau"
+            self.func_type = "3"
             self._generate_3grau()
         
         #Comportamento para responder o tipo da função
@@ -106,7 +106,7 @@ class Gerador(Agent):
 
 async def main():
     gerador_agent = Gerador("jvfg@jabb.im", "TrabS1")
-    await gerador_agent.start(auto_register=True)
+    await gerador_agent.start()
     print("Gerador iniciado e aguardando solicitações...")
 
     while gerador_agent.is_alive():

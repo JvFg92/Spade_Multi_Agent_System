@@ -35,7 +35,7 @@ class ResolvedorAgent(Agent):
 
     class GetTypeState(State):
         async def run(self):
-            print("[Estado GetType] Solicitando tipo da função ao Gerador...")
+            print("Solicitando tipo da função ao Gerador...")
             
             #Envia uma mensagem de 'request' para obter o tipo da função
             msg = Message(to=GERADOR_JID)
@@ -46,7 +46,7 @@ class ResolvedorAgent(Agent):
             # Aguarda a resposta por até 20 segundos
             response = await self.receive(timeout=20)
             if response:
-                self.agent.func_type = response.body
+                self.agent.func_type = response.body.lower()
                 print(f"[Estado GetType] Tipo recebido: {self.agent.func_type}")
                 self.set_next_state(STATE_SOLVE)
             else:
@@ -152,11 +152,11 @@ class ResolvedorAgent(Agent):
         async def run(self):
             func_type = self.agent.func_type
             success = False
-            if func_type == "1grau":
+            if func_type == "1":
                 success = await self.solve_1grau()
-            elif func_type == "2grau":
+            elif func_type == "2":
                 success = await self.solve_2grau()
-            elif func_type == "3grau":
+            elif func_type == "3":
                 success = await self.solve_3grau()
             else:
                 print(f"[Estado Solve] Tipo de função desconhecido: {func_type}")
