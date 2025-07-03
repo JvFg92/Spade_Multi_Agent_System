@@ -200,7 +200,7 @@ source venv/bin/activate
 
 ### 3. Install Spade:
 ```bash
-pip install spade
+pip install spade numpy
 ```
 
 ### 4. Clone the Repository:
