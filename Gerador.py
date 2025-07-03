@@ -15,11 +15,33 @@ class Gerador(Agent):
                 sender_jid = str(msg.sender).split('/')[0]
                 reply_msg = Message(to=sender_jid)
                 reply_msg.set_metadata("performative", "inform")
+                if self.agent.func_type not in ["1", "2", "3"]:
+                    print(f"[Gerador] Erro: func_type inválido: {self.agent.func_type}")
+                    self.agent.func_type = "1"  # Valor padrão em caso de erro
                 reply_msg.body = self.agent.func_type
                 await self.send(reply_msg)
                 print(f"[Gerador] Responded to {sender_jid} with function type: {self.agent.func_type}")
             else:
                 print(f"[Gerador] (ReportTypeBehav) No message received within timeout (10s).")
+
+    class CalculateBehav(CyclicBehaviour):
+        async def run(self):
+            msg = await self.receive(timeout=10)
+            if msg:
+                print(f"[Gerador] (CalculateBehav) Received message. Sender: {msg.sender}, Performative: {msg.get_metadata('performative')}, Body: {msg.body}")
+                try:
+                    x = float(msg.body)
+                    result = self.agent.f(x)
+                    sender_jid = str(msg.sender).split('/')[0]
+                    reply_msg = Message(to=sender_jid)
+                    reply_msg.set_metadata("performative", "inform")
+                    reply_msg.body = str(result)  # Preservar precisão, sem int
+                    await self.send(reply_msg)
+                    print(f"[Gerador] Sent calculation result to {sender_jid}: f({x}) = {result}")
+                except (ValueError, TypeError) as e:
+                    print(f"[Gerador] Erro ao processar o pedido de {msg.sender}: {e}")
+            else:
+                print(f"[Gerador] (CalculateBehav) No message received within timeout (10s).")
 
     class DebugBehav(CyclicBehaviour):
         async def run(self):
@@ -46,6 +68,12 @@ class Gerador(Agent):
         self.add_behaviour(report_behav, template_type)
         print(f"[Gerador] Added ReportTypeBehav with template: performative='request'")
 
+        calc_behav = self.CalculateBehav()
+        template_calc = Template()
+        template_calc.set_metadata("performative", "subscribe")
+        self.add_behaviour(calc_behav, template_calc)
+        print(f"[Gerador] Added CalculateBehav with template: performative='subscribe'")
+
         debug_behav = self.DebugBehav()
         self.add_behaviour(debug_behav)
         print(f"[Gerador] Added DebugBehav for unfiltered messages")
@@ -66,7 +94,7 @@ class Gerador(Agent):
         while self.a == 0:
             self.a = random.randint(-10, 10)
         self.f = lambda x: self.a * (x - self.root1) * (x - self.root2)
-        print(f"[Gerador] Função de 2º Grau Gerada. Raízes = {self.root1}, {self.root2}")
+        print(f"[Gerador] Função de 2º Grau Gerada: f(x) = {self.a}(x - {self.root1})(x - {self.root2}). Raízes = {self.root1}, {self.root2}")
 
     def _generate_3grau(self):
         self.root1 = random.randint(-200, 200)
@@ -76,7 +104,7 @@ class Gerador(Agent):
         while self.k == 0:
             self.k = random.uniform(-1, 1)
         self.f = lambda x: self.k * (x - self.root1) * (x - self.root2) * (x - self.root3)
-        print(f"[Gerador] Função de 3º Grau Gerada. Raízes = {self.root1}, {self.root2}, {self.root3}")
+        print(f"[Gerador] Função de 3º Grau Gerada: f(x) = {self.k}(x - {self.root1})(x - {self.root2})(x - {self.root3}). Raízes = {self.root1}, {self.root2}, {self.root3}")
 
 async def main():
     gerador_agent = Gerador("jvfg@localhost", "TrabS1")
