@@ -9,10 +9,10 @@ class Gerador(Agent):
     class GenerateFunction(OneShotBehaviour):
         def _generate_1grau(self):
             """Gera uma função de 1º grau: f(x) = ax + b"""
-            self.agent.root1 = random.randint(-100, 100)
+            self.agent.root1 = random.randint(-1000, 1000)
             self.agent.a = 0
             while self.agent.a == 0:
-                self.agent.a = random.randint(-100, 100)
+                self.agent.a = random.randint(-1000, 1000)
             self.agent.b = -self.agent.a * self.agent.root1
             self.agent.coefs = [self.agent.b, self.agent.a]  # [constant, x]
             func_str = f"f(x) = {self.agent.a}x + {self.agent.b}"
@@ -20,8 +20,8 @@ class Gerador(Agent):
 
         def _generate_2grau(self):
             """Gera uma função de 2º grau: f(x) = a(x-r1)(x-r2)"""
-            self.agent.root1 = random.randint(-100, 100)
-            self.agent.root2 = random.randint(-100, 100)
+            self.agent.root1 = random.randint(-1000, 1000)
+            self.agent.root2 = random.randint(-1000, 1000)
             self.agent.a = 0
             while self.agent.a == 0:
                 self.agent.a = random.randint(-10, 10)
@@ -34,9 +34,9 @@ class Gerador(Agent):
 
         def _generate_3grau(self):
             """Gera uma função de 3º grau: f(x) = k(x-r1)(x-r2)(x-r3)"""
-            self.agent.root1 = random.randint(-100, 100)
-            self.agent.root2 = random.randint(-100, 100)
-            self.agent.root3 = random.randint(-100, 100)
+            self.agent.root1 = random.randint(-1000, 1000)
+            self.agent.root2 = random.randint(-1000, 1000)
+            self.agent.root3 = random.randint(-1000, 1000)
             self.agent.k = 0
             while self.agent.k == 0:
                 self.agent.k = random.randint(-10, 10)

@@ -33,7 +33,7 @@ class Resolvedor(Agent):
             print(f"[Resolvedor] Iniciando resolução para função de {self.agent.degree}º grau...")
             self.results = []
             self.points_needed = 5
-            available_x = list(range(-100, 101))
+            available_x = list(range(-1000, 1001))
             random.shuffle(available_x)
             for _ in range(self.points_needed):
                 if not available_x:
