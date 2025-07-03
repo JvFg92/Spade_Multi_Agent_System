@@ -1,115 +1,109 @@
 import spade
 from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour, OneShotBehaviour
+from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 from spade.template import Template
-import asyncio
 import random
 
 class Resolvedor(Agent):
-    class RequestFunctionType(CyclicBehaviour):
-        async def on_start(self):
-            self.retry_count = 0
-            self.max_retries = 3
-            self.iteration_count = 0
-            self.max_iterations = 5  # Limite de 5 iterações
-
+    class DiscoverDegree(CyclicBehaviour):
         async def run(self):
-            if self.iteration_count >= self.max_iterations:
-                print(f"[Resolvedor] Max iterations ({self.max_iterations}) reached. Stopping.")
-                self.kill()
-                return
-
-            if self.retry_count >= self.max_retries:
-                print(f"[Resolvedor] Max retries ({self.max_retries}) reached for this iteration. Moving to next iteration.")
-                self.retry_count = 0
-                self.iteration_count += 1
-                return
-
-            print(f"[Resolvedor] Sending request for function type to Gerador... (Attempt {self.retry_count + 1}/{self.max_retries}, Iteration {self.iteration_count + 1}/{self.max_iterations})")
+            print("[Resolvedor] Solicitando grau da função...")
             msg = Message(to="jvfg@localhost")
             msg.set_metadata("performative", "request")
-            msg.body = "Qual é o tipo da função?"
+            msg.body = "Qual o grau da função?"
             await self.send(msg)
-            print(f"[Resolvedor] Request sent.")
 
-            resposta = await self.receive(timeout=15)
+            resposta = await self.receive(timeout=5)
             if resposta:
-                print(f"[Resolvedor] (RequestFunctionType) Received message. Sender: {resposta.sender}, Performative: {resposta.get_metadata('performative')}, Body: {resposta.body}")
-                if resposta.get_metadata("performative") == "inform":
-                    if resposta.body in ["1", "2", "3"]:
-                        print(f"[Resolvedor] Correct response received from Gerador: {resposta.body}")
-                        self.agent.function_type = resposta.body
-                        print(f"[Resolvedor] Function type stored: {self.agent.function_type}")
-                        self.agent.add_behaviour(self.agent.CalculateRequestBehav(self.iteration_count))
-                        print(f"[Resolvedor] Added CalculateRequestBehav for iteration {self.iteration_count + 1}")
-                        self.retry_count = 0
-                        self.iteration_count += 1
-                    else:
-                        print(f"[Resolvedor] Invalid function type received: {resposta.body}")
-                        self.retry_count += 1
+                degree = resposta.body
+                print(f"[Resolvedor] Grau da função: {degree}")
+                if degree in ["1", "2", "3"]:
+                    self.agent.degree = int(degree)
+                    print(f"[Resolvedor] Função de {degree}º grau")
+                    self.agent.add_behaviour(self.agent.SecantMethod())
+                    self.kill()
                 else:
-                    print(f"[Resolvedor] Received unexpected message in RequestFunctionType.")
-            else:
-                print(f"[Resolvedor] No response received from Gerador within the timeout (15s).")
-                self.retry_count += 1
+                    print(f"[Resolvedor] Grau inválido: {degree}")
+                    self.kill()
 
-    class CalculateRequestBehav(OneShotBehaviour):
-        def __init__(self, iteration):
-            super().__init__()
-            self.iteration = iteration
-
+    class SecantMethod(CyclicBehaviour):
+        async def on_start(self):
+            print("[Resolvedor] Iniciando método da secante...")
+            self.results = []  # Store (x, f(x)) pairs
+            self.x0 = random.randint(-100, 100)
+            self.x1 = random.randint(-100, 100)
+            while self.x1 == self.x0:
+                self.x1 = random.randint(-100, 100)
+            self.y0 = await self.check_fx(self.x0)
+            self.y1 = await self.check_fx(self.x1)
+            self.results.append((self.x0, self.y0))
+            self.results.append((self.x1, self.y1))
+            self.i = 0
+            self.max_iterations = 100
+        
         async def run(self):
-            x = random.randint(-10, 10)
-            print(f"[Resolvedor] Sending calculation request for x = {x} to Gerador (Iteration {self.iteration + 1})...")
+            if self.i >= self.max_iterations:
+                print(f"[Resolvedor] Máximo de iterações ({self.max_iterations}) atingido.")
+                self.kill()
+                await self.agent.stop()
+                return
+
+            if (self.y1 - self.y0) == 0:
+                print("[Resolvedor] Derivada nula, escolhendo novos pontos...")
+                self.x0 = random.randint(-100, 100)
+                self.x1 = random.randint(-100, 100)
+                while self.x1 == self.x0:
+                    self.x1 = random.randint(-100, 100)
+                self.y0 = await self.check_fx(self.x0)
+                self.y1 = await self.check_fx(self.x1)
+                self.results.append((self.x0, self.y0))
+                self.results.append((self.x1, self.y1))
+                return
+
+            x = self.x1 - self.y1 * (self.x1 - self.x0) / (self.y1 - self.y0)
+            x = max(min(x, 100), -100)  # Keep within bounds
+            y = await self.check_fx(x)
+            self.results.append((x, y))
+
+            print(f"[Resolvedor] Iteração {self.i}: f({x:.6f}) = {y:.6f}")
+            if abs(y) < 1e-6:
+                print(f"[Resolvedor] Raiz encontrada: f({x:.6f}) ≈ 0")
+                print(f"[Resolvedor] Pontos coletados: {self.results}")
+                self.kill()
+                await self.agent.stop()
+                return
+
+            self.x0, self.x1 = self.x1, x
+            self.y0, self.y1 = self.y1, y
+            self.i += 1
+
+        async def check_fx(self, x):
             msg = Message(to="jvfg@localhost")
             msg.set_metadata("performative", "subscribe")
             msg.body = str(x)
             await self.send(msg)
-            print(f"[Resolvedor] Calculation request sent.")
-
-            resposta = await self.receive(timeout=15)
+            resposta = await self.receive(timeout=10)  # Increased timeout
             if resposta:
-                print(f"[Resolvedor] (CalculateRequestBehav) Received message. Sender: {resposta.sender}, Performative: {resposta.get_metadata('performative')}, Body: {resposta.body}")
-                if resposta.get_metadata("performative") == "inform":
-                    print(f"[Resolvedor] Received calculation result from Gerador: f({x}) = {resposta.body}")
-                else:
-                    print(f"[Resolvedor] Received unexpected message in CalculateRequestBehav.")
-            else:
-                print(f"[Resolvedor] No response received for calculation request within the timeout (15s).")
-
-    class DebugBehav(CyclicBehaviour):
-        async def run(self):
-            msg = await self.receive(timeout=5)
-            if msg:
-                if str(msg.sender).split('/')[0] == str(self.agent.jid).split('/')[0]:
-                    print(f"[Resolvedor] (DebugBehav) Ignored message from self. Sender: {msg.sender}, Performative: {msg.get_metadata('performative')}, Body: {msg.body}")
-                else:
-                    print(f"[Resolvedor] (DebugBehav) Received unfiltered message. Sender: {msg.sender}, Performative: {msg.get_metadata('performative')}, Body: {msg.body}")
-            else:
-                print(f"[Resolvedor] (DebugBehav) No unfiltered message received within timeout (5s).")
+                try:
+                    y = float(resposta.body)
+                    print(f"[Resolvedor] Recebido: f({x}) = {y}")
+                    return y
+                except ValueError:
+                    print(f"[Resolvedor] Resposta inválida: {resposta.body}")
+                    return None
+            print(f"[Resolvedor] Sem resposta para f({x})")
+            return None
 
     async def setup(self):
-        print(f"[Resolvedor] Resolvedor agent {self.jid} started.")
-        self.function_type = None
-
-        rcvr_behav = self.RequestFunctionType()
-        receive_template = Template()
-        receive_template.set_metadata("performative", "inform")
-        self.add_behaviour(rcvr_behav, receive_template)
-        print(f"[Resolvedor] Added RequestFunctionType with template: performative='inform'")
-
-        debug_behav = self.DebugBehav()
-        self.add_behaviour(debug_behav)
-        print(f"[Resolvedor] Added DebugBehav for unfiltered messages")
+        print(f"[Resolvedor] Resolvedor iniciado: {self.jid}")
+        self.add_behaviour(self.DiscoverDegree())
 
 async def main():
-    resolvedor_agent = Resolvedor("rcvr@localhost", "TrabS1")
-    await resolvedor_agent.start()
-    print("[Resolvedor] Giving Gerador a moment to get ready...")
-    await asyncio.sleep(2)
-    await spade.wait_until_finished(resolvedor_agent)
-    print("[Resolvedor] Agente Resolvedor encerrou!")
+    resolvedor = Resolvedor("rcvr@localhost", "TrabS1")
+    await resolvedor.start()
+    await spade.wait_until_finished(resolvedor)
+    print("[Resolvedor] Resolvedor encerrou!")
 
 if __name__ == "__main__":
     spade.run(main())
