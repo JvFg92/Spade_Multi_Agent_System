@@ -39,6 +39,7 @@ class Resolvedor(Agent):
             self.points_needed = 5
             available_x = list(range(-1000, 1001))
             random.shuffle(available_x)
+            #Retirar for, utilizar o processo ciclico da função solve.
             for _ in range(self.points_needed):
                 if not available_x:
                     break
@@ -54,7 +55,8 @@ class Resolvedor(Agent):
                 self.kill()
                 await self.agent.stop()
                 return
-
+            #Faz a verificação do grau e chama o método de resolução apropriado, rodar no discover degree
+            #Instanciar o tipo da função como global para a classe Resolvedor e apenas chamar no solve
             if self.agent.degree == 1:
                 await self.solve_1grau()
             elif self.agent.degree == 2:
