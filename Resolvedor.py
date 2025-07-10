@@ -26,8 +26,15 @@ class Resolvedor(Agent):
                 if degree in ["1", "2", "3"]:
                     self.agent.degree = int(degree)
                     print(f"[Resolvedor] Função de {degree}º grau")
+                    if self.agent.degree == 1:
+                        self.agent.solve_method = self.agent.SolveFunction.solve_1grau
+                    elif self.agent.degree == 2:
+                        self.agent.solve_method = self.agent.SolveFunction.solve_2grau
+                    else:
+                        self.agent.solve_method = self.agent.SolveFunction.solve_3grau
                     self.agent.add_behaviour(self.agent.SolveFunction())
                     self.kill()
+
                 else:
                     print(f"[Resolvedor] Grau inválido: {degree}")
                     self.kill()
@@ -57,12 +64,8 @@ class Resolvedor(Agent):
                 return
             #Faz a verificação do grau e chama o método de resolução apropriado, rodar no discover degree
             #Instanciar o tipo da função como global para a classe Resolvedor e apenas chamar no solve
-            if self.agent.degree == 1:
-                await self.solve_1grau()
-            elif self.agent.degree == 2:
-                await self.solve_2grau()
-            else:
-                await self.solve_3grau()
+            await self.agent.solve_method(self)
+
             self.kill()
             await self.agent.stop()
 

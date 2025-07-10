@@ -65,18 +65,17 @@ class Gerador(Agent):
         async def run(self):
             msg = await self.receive(timeout=5)
             if msg:
-                try:
-                    x = float(msg.body)
-                    y = 0
-                    for i in range(len(self.agent.coefs)):
-                        y += self.agent.coefs[i] * (x ** i)
-                    reply = Message(to=str(msg.sender))
-                    reply.set_metadata("performative", "inform")
-                    reply.body = str(y)
-                    await self.send(reply)
-                    print(f"[Gerador] Enviado para {msg.sender}: f({x}) = {y}")
-                except ValueError:
-                    print(f"[Gerador] Valor x inválido recebido: {msg.body}")
+                
+                x = float(msg.body)
+                y = 0
+                for i in range(len(self.agent.coefs)):
+                    y += self.agent.coefs[i] * (x ** i)
+                reply = Message(to=str(msg.sender))
+                reply.set_metadata("performative", "inform")
+                reply.body = str(y)
+                await self.send(reply)
+                print(f"[Gerador] Enviado para {msg.sender}: f({x}) = {y}")
+                
 
     class InformFunctionDegree(CyclicBehaviour):
         async def run(self):
