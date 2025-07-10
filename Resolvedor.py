@@ -1,7 +1,3 @@
-"""
-Please take a look in the repository https://github.com/JvFg92/Spade_Multi_Agent_System in github.
-"""
-
 import spade
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
@@ -43,31 +39,29 @@ class Resolvedor(Agent):
         async def on_start(self):
             print(f"[Resolvedor] Iniciando resolução para função de {self.agent.degree}º grau...")
             self.results = []
-            self.points_needed = 5
-            available_x = list(range(-1000, 1001))
-            random.shuffle(available_x)
-            #Retirar for, utilizar o processo ciclico da função solve.
-            for _ in range(self.points_needed):
-                if not available_x:
-                    break
-                x = available_x.pop()
-                y = await self.check_fx(x)
-                if y is not None:
-                    self.results.append((x, y))
-            print(f"[Resolvedor] Pontos coletados: {self.results}")
+            self.points_needed = self.agent.degree + 1
+            self.available_x = list(range(-1000, 1001))
+            random.shuffle(self.available_x)
 
         async def run(self):
-            if len(self.results) < self.agent.degree + 1:
-                print(f"[Resolvedor] Pontos insuficientes para resolver função de grau {self.agent.degree}. Necessário {self.agent.degree + 1}, obtido {len(self.results)}.")
+            if len(self.results) >= self.points_needed:
+                print(f"[Resolvedor] Pontos suficientes coletados: {self.results}")
+                await self.agent.solve_method(self)
                 self.kill()
                 await self.agent.stop()
                 return
-            #Faz a verificação do grau e chama o método de resolução apropriado, rodar no discover degree
-            #Instanciar o tipo da função como global para a classe Resolvedor e apenas chamar no solve
-            await self.agent.solve_method(self)
 
-            self.kill()
-            await self.agent.stop()
+            if not self.available_x:
+                print("[Resolvedor] Sem mais valores de x disponíveis.")
+                self.kill()
+                await self.agent.stop()
+                return
+
+            x = self.available_x.pop()
+            y = await self.check_fx(x)
+            if y is not None:
+                self.results.append((x, y))
+                print(f"[Resolvedor] Ponto adicionado: ({x}, {y})")
 
         async def check_fx(self, x):
             msg = Message(to="jvfg@localhost")
@@ -88,15 +82,11 @@ class Resolvedor(Agent):
 
         async def solve_1grau(self):
             print("[Resolvedor] Resolvendo função de 1º grau...")
-            if len(self.results) < 2:
-                print("[Resolvedor] Necessário 2 pontos para função linear.")
-                return
             x0, y0 = self.results[0]
             x1, y1 = self.results[1]
             if x0 == x1:
                 print("[Resolvedor] Pontos com mesmo x, não é possível resolver.")
                 return
-            # Solve: y0 = a*x0 + b, y1 = a*x1 + b
             a = (y1 - y0) / (x1 - x0)
             b = y0 - a * x0
             if a == 0:
@@ -108,14 +98,10 @@ class Resolvedor(Agent):
 
         async def solve_2grau(self):
             print("[Resolvedor] Resolvendo função de 2º grau...")
-            if len(self.results) < 3:
-                print("[Resolvedor] Necessário 3 pontos para função quadrática.")
-                return
             x0, y0 = self.results[0]
             x1, y1 = self.results[1]
             x2, y2 = self.results[2]
             try:
-                # Solve: y = ax^2 + bx + c
                 A = np.array([[x0**2, x0, 1], [x1**2, x1, 1], [x2**2, x2, 1]])
                 B = np.array([y0, y1, y2])
                 a, b, c = np.linalg.solve(A, B)
@@ -132,10 +118,6 @@ class Resolvedor(Agent):
 
         async def solve_3grau(self):
             print("[Resolvedor] Resolvendo função de 3º grau...")
-            if len(self.results) < 4:
-                print("[Resolvedor] Necessário 4 pontos para função cúbica.")
-                return
-            # Fit cubic: f(x) = kx^3 + bx^2 + cx + d
             x0, y0 = self.results[0]
             x1, y1 = self.results[1]
             x2, y2 = self.results[2]
@@ -149,13 +131,12 @@ class Resolvedor(Agent):
                 print("[Resolvedor] Não foi possível ajustar a função cúbica (matriz singular).")
                 return
 
-            # Find one root using bisection
             points = sorted(self.results, key=lambda p: p[0])
             root1 = None
             for i in range(len(points) - 1):
                 x0, y0 = points[i]
                 x1, y1 = points[i + 1]
-                if y0 * y1 < 0:  # Sign change indicates a root
+                if y0 * y1 < 0:
                     print(f"[Resolvedor] Intervalo com mudança de sinal: [{x0}, {x1}]")
                     root1 = await self._bisection(x0, x1)
                     if root1 is not None:
@@ -168,7 +149,6 @@ class Resolvedor(Agent):
             q_a = k
             q_b = b + k * root1
             q_c = c + b * root1 + k * root1**2
-            # Solve quadratic for remaining roots
             discriminant = q_b**2 - 4*q_a*q_c
             if discriminant >= 0:
                 root2 = (-q_b + discriminant**0.5) / (2*q_a)
@@ -180,7 +160,7 @@ class Resolvedor(Agent):
         async def _bisection(self, a, b, tolerance=1e-6, max_iter=100):
             ya = await self.check_fx(a)
             yb = await self.check_fx(b)
-            if ya * yb >= 0:
+            if ya is None or yb is None or ya * yb >= 0:
                 return None
             for _ in range(max_iter):
                 c = (a + b) / 2
